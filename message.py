@@ -1,5 +1,15 @@
 import struct
 
+"""
+Message struct is this 
+{
+unsigned int sig,       for len 0:4
+unsigned int totlen,    for len 4:8
+unsigned int type,      for len 8:12
+char[]       data       for len 12:totlen
+}
+"""
+
 message_sig = 0xA187A278
 message_echo_type = 0x1234
 
