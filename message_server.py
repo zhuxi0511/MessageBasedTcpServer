@@ -1,13 +1,15 @@
 import socket 
 import select 
 import threading
+import time
 
 import message
 
 class MessageServer:
-    def __init__(self, host, port):
+    def __init__(self, host, port, timeout=1):
         self.host = host 
         self.port = port
+        self.timeout = 0.5
         self.epoll = select.epoll()
         self.fd_to_socket = {}
         self.client_buffer = {}
@@ -26,6 +28,9 @@ class MessageServer:
         self.fd_to_socket[mssocket.fileno()] = mssocket
 
         return mssocket
+
+    def server_cron(self):
+        print "Run server cron"
 
     def process(self, fd, type, data):
         #print "Process message here"
@@ -51,9 +56,23 @@ class MessageServer:
 
     def run(self):
 
+        epoll_wait_time = self.timeout
+
+        last_server_cron_run = time.time()
+
         print "Start to wait epoll event"
         while True:
-            events = self.epoll.poll()
+            events = self.epoll.poll(epoll_wait_time)
+
+            # Run server cron
+            server_cron_check = time.time()
+            server_cron_gap_time = server_cron_check - last_server_cron_run
+            if server_cron_gap_time > epoll_wait_time:
+                self.server_cron()
+                epoll_wait_time = self.timeout
+                last_server_cron_run = time.time()
+            else:
+                epoll_wait_time = self.timeout - server_cron_gap_time 
             
             for fd, event in events:
                 socket = self.fd_to_socket[fd]
