@@ -5,11 +5,11 @@ import time
 
 import message
 
-class MessageServer:
+class MessageServer(object):
     def __init__(self, host, port, timeout=1):
         self.host = host 
         self.port = port
-        self.timeout = 0.5
+        self.timeout = timeout
         self.epoll = select.epoll()
         self.fd_to_socket = {}
         self.client_buffer = {}
@@ -28,6 +28,10 @@ class MessageServer:
         self.fd_to_socket[mssocket.fileno()] = mssocket
 
         return mssocket
+
+    def close_server(self):
+        self.mssocket.close()
+        print "Server closed!"
 
     def server_cron(self):
         print "Run server cron"
@@ -48,6 +52,7 @@ class MessageServer:
         del self.client_buffer[fd]
 
     def add_reply(self, fd, type, data):
+        print "reply:", fd, type, data
         if data is None or len(data) == 0:
             return
         write_buffer = self.client_buffer[fd][1]
@@ -126,6 +131,8 @@ class MessageServer:
                     self.client_buffer[fd][1] = list(write_buffer[nwrite:])
                     if len(self.client_buffer[fd][1]) == 0:
                         self.epoll.modify(fd, select.EPOLLIN)
+
+        self.close_server()
 
 
 
