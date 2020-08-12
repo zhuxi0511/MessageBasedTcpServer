@@ -71,13 +71,17 @@ class MessageServer(object):
 
             # Run server cron
             server_cron_check = time.time()
-            server_cron_gap_time = server_cron_check - last_server_cron_run
+
+            # some time the result will small then 0 
+            # Do not know the reason now
+            server_cron_gap_time = max(server_cron_check - last_server_cron_run, 0)
+
             if server_cron_gap_time > epoll_wait_time:
                 self.server_cron()
                 epoll_wait_time = self.timeout
                 last_server_cron_run = time.time()
             else:
-                epoll_wait_time = self.timeout - server_cron_gap_time 
+                epoll_wait_time -= server_cron_gap_time 
             
             for fd, event in events:
                 socket = self.fd_to_socket[fd]
