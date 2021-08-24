@@ -108,8 +108,12 @@ class MessageServer(object):
                         data = socket.recv(1024)
                     except socket.error as e:
                         print e
+                        continue
 
-                    if data: 
+                    if not data:
+                        print "Client close!"
+                        self.close_client(fd)
+                    else:
                         read_buffer = self.client_buffer[fd][0]
                         read_buffer.extend(data) 
 
